@@ -1,1 +1,1 @@
-print('hello')
+from models import *
