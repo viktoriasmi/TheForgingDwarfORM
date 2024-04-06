@@ -9,7 +9,6 @@ STATUS_CHOICES = [
     ('c', 'Canceled'),
 ]
 
-
 def create_tables_if_not_exist():
     # Проверяем, существуют ли таблицы, и создаем их, если они не существуют
     if not db.is_closed():
@@ -44,7 +43,7 @@ class CatalogItem(BaseModel):
     type = CharField(max_length=255)
     material = CharField(max_length=255)
     style = CharField(max_length=255)
-    description = TextField()
+    description = TextField(null=False)
     production_time = IntegerField()
     price = FloatField()
 
