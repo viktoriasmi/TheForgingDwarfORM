@@ -27,7 +27,7 @@ class User(BaseModel):
     class Meta:
         table_name = 'users'
     name = CharField(max_length=100)
-    password = BlobField()
+    password = TextField()
 
 class Client(BaseModel):
     class Meta:

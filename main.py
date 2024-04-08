@@ -1,6 +1,7 @@
 from models import *
 import datetime
 from peewee import *
+import hashlib
 
 if not Client.table_exists():
     db.create_tables([Client])
@@ -127,3 +128,18 @@ if not OrderIndividual.table_exists():
         price = 84000.00
     ).save()
 
+# основной код тут
+
+def encrypt_password():
+    users = User.select()
+
+    for user in users:
+        password = user.password.encode('utf-8')
+        hashed_password = hashlib.sha256(password).hexdigest()
+
+        user.password = hashed_password
+        user.save()
+
+    print("Пароли успешно зашифрованы")
+
+encrypt_password()
