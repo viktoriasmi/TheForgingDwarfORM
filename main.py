@@ -1,3 +1,4 @@
+import random
 from models import *
 import datetime
 from peewee import *
@@ -146,6 +147,40 @@ def encrypt_password(password):
     hashed_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
     return hashed_password
 
+def theforgingdwarfadmin():
+    while True:
+        #начало админ
+        print('Добро пожаловать в кузницу The Forging Dwarf!')
+        print('Выберите одну из опций: ')
+        print('1 - добавить новый заказ')
+        print('2 - добавить нового клиента')
+        print('3 - удалить заказ')
+        print('4 - изменить заказ')
+        print('5 - добавить новое изделие в каталог')
+        print('6 - изменить изделие в каталоге')
+        print('7 - поиск')
+        print('8 - показать очередь заказов')
+        print('9 - вывести доход кузницы')
+        number = int(input("Выберите для продолжения: "))
+        if number == 1:
+            add_new_order()
+
+
+def theforgingdwarfuser():
+    while True:
+        # начало юзер
+        print('Добро пожаловать в кузницу The Forging Dwarf!')
+        print('Выберите одну из опций: ')
+        print('1 - зарегестрироваться как клиент')
+        print('2 - отправить заявку на заказ')
+        print('3 - поиск')
+        print('4 - вывести каталог изделий')
+        number = int(input("Выберите для продолжения: "))
+        # добавить себя как клиента
+        if number == 1:
+            pass
+
+
 def authenticate_user():
     username = input("Введите имя пользователя: ")
     password = input("Введите пароль: ")
@@ -155,10 +190,61 @@ def authenticate_user():
 
     if user:
         if user.password == hashed_password:
-            print("Авторизация успешна!\n")
+            if username == "admin":
+                theforgingdwarfadmin()
+            else:
+                theforgingdwarfuser()
         else:
             print("Неверный пароль\n")
     else:
         print("Пользователь не найден")
+
+def add_new_order():
+    print("Выберите тип заказа:")
+    print("1. Заказ из каталога")
+    print("2. Индивидуальный заказ")
+
+    order_type = int(input("Введите ваш выбор: "))
+
+    if order_type == 1:
+        print("Клиенты: ")
+        clients = Client.select()
+        for client in clients:
+            print(client.id, client.first_name, client.last_name, client.address)
+
+        client_id = int(input("Введите ID клиента: "))
+
+        print("Каталог:")
+        catalog_items = CatalogItem.select()
+        for item in catalog_items:
+            print(item.id, item.name, item.type, item.material, item.style)
+
+        catalog_id = int(input("Введите ID изделия: "))
+
+        amount = int(input("Введите количество: "))
+
+        new_order = OrderCatalog.create(client=client_id, catalog=catalog_id, amount=amount)
+        print("Заказ успешно добавлен!\n")
+
+    elif order_type == 2:
+        print("Клиенты:")
+        clients = Client.select()
+        for client in clients:
+            print(client.id, client.first_name, client.last_name, client.address)
+
+        client_id = int(input("Введите ID клиента: "))
+
+        req = input("Введите описание заказа: ")
+        amount = int(input("Введите количество: "))
+        price = random.randint(10000,100000)
+
+        new_order = OrderIndividual.create(client=client_id, req=req, amount=amount, price=price)
+        print("Заказ успешно добавлен!\n")
+
+    else:
+        print("Неправильный выбор")
+
+
+
 
 authenticate_user()
