@@ -3,6 +3,17 @@ import datetime
 from peewee import *
 import hashlib
 
+def encrypt_password_first():
+    users = User.select()
+    for user in users:
+        password = user.password.encode('utf-8')
+        hashed_password = hashlib.sha256(password).hexdigest()
+
+        user.password = hashed_password
+        user.save()
+    #print("Пароли успешно зашифрованы")
+
+
 if not Client.table_exists():
     db.create_tables([Client])
     Client(
@@ -119,6 +130,7 @@ if not User.table_exists():
         name='admin',
         password='aaa'
     ).save()
+    encrypt_password_first()
 if not OrderIndividual.table_exists():
     db.create_tables([OrderIndividual])
     OrderIndividual(
@@ -130,16 +142,23 @@ if not OrderIndividual.table_exists():
 
 # основной код тут
 
-def encrypt_password():
-    users = User.select()
+def encrypt_password(password):
+    hashed_password = hashlib.sha256(password.encode('utf-8')).hexdigest()
+    return hashed_password
 
-    for user in users:
-        password = user.password.encode('utf-8')
-        hashed_password = hashlib.sha256(password).hexdigest()
+def authenticate_user():
+    username = input("Введите имя пользователя: ")
+    password = input("Введите пароль: ")
 
-        user.password = hashed_password
-        user.save()
+    hashed_password = encrypt_password(password)
+    user = User.select().where(User.name == username).first()
 
-    print("Пароли успешно зашифрованы")
+    if user:
+        if user.password == hashed_password:
+            print("Авторизация успешна!\n")
+        else:
+            print("Неверный пароль\n")
+    else:
+        print("Пользователь не найден")
 
-encrypt_password()
+authenticate_user()
