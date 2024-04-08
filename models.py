@@ -14,7 +14,7 @@ def create_tables_if_not_exist():
     if not db.is_closed():
         db.connect()
 
-    tables_to_create = [User, Client, CatalogItem, OrderCatalog, OrderIndividual, IncomeData, IncomeIndividualData,
+    tables_to_create = [IncomeData, IncomeIndividualData,
                         QueueData, QueueIndividualData]
     for model in tables_to_create:
         if not model.table_exists():
@@ -43,7 +43,7 @@ class CatalogItem(BaseModel):
     type = CharField(max_length=255)
     material = CharField(max_length=255)
     style = CharField(max_length=255)
-    description = TextField(null=False)
+    description = TextField(null=True)
     production_time = IntegerField()
     price = FloatField()
 
@@ -54,17 +54,16 @@ class OrderCatalog(BaseModel):
     catalog = ForeignKeyField(CatalogItem)
     created_at = DateTimeField(default=datetime.datetime.now)
     amount = IntegerField(default=1)
-    status = CharField(choices=STATUS_CHOICES)
+    status = CharField(choices=STATUS_CHOICES, default='ip')
 
 class OrderIndividual(BaseModel):
     class Meta:
         table_name = 'orders_individual'
     client = ForeignKeyField(Client)
-    req = TextField(null=False)
-    catalog = ForeignKeyField(CatalogItem)
+    req = TextField(null=True)
     created_at = DateTimeField(default=datetime.datetime.now)
     amount = IntegerField(default=1)
-    status = CharField(choices=STATUS_CHOICES)
+    status = CharField(choices=STATUS_CHOICES, default='ip')
     price = FloatField()
 
 class IncomeData(BaseModel):
@@ -86,7 +85,7 @@ class QueueData(BaseModel):
         table_name = 'queue_regular'
     order = ForeignKeyField(OrderCatalog)
     created_at = DateTimeField()
-    status = CharField(choices=STATUS_CHOICES)
+    status = CharField(choices=STATUS_CHOICES, default='ip')
     production_time = IntegerField()
 
 class QueueIndividualData(BaseModel):
@@ -94,7 +93,7 @@ class QueueIndividualData(BaseModel):
         table_name = 'queue_individual'
     order = ForeignKeyField(OrderIndividual)
     created_at = DateTimeField()
-    status = CharField(choices=STATUS_CHOICES)
+    status = CharField(choices=STATUS_CHOICES, default='ip')
     production_time = IntegerField()
 
 if __name__ == '__main__':

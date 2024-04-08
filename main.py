@@ -1,77 +1,83 @@
 from models import *
+import datetime
+from peewee import *
 
-Client(
-    first_name='Ричард',
-    last_name='Торрес',
-    address='9902 Майерт Ленд Соледадвилль'
-)
-Client(
-    first_name='Дебра',
-    last_name='Флорес',
-    address='5390 Люкс Вивьен Маунт'
-)
-Client(
-    first_name='Карен',
-    last_name='Бейкер',
-    address='77402 Люкс Энджел Клифф'
-)
-CatalogItem(
-    name='Меч Экскалибур',
-    type='Холодное оружие',
-    material='Дамасская сталь',
-    style='Готика',
-    production_time=120,
-    price=10000.00
-)
+if not Client.table_exists():
+    db.create_tables([Client])
+    Client(
+        first_name='Ричард',
+        last_name='Торрес',
+        address='9902 Майерт Ленд Соледадвилль'
+    ).save()
+    Client(
+        first_name='Дебра',
+        last_name='Флорес',
+        address='5390 Люкс Вивьен Маунт'
+    ).save()
+    Client(
+        first_name='Карен',
+        last_name='Бейкер',
+        address='77402 Люкс Энджел Клифф'
+    ).save()
+if not CatalogItem.table_exists():
+    db.create_tables([CatalogItem])
+    CatalogItem(
+        name='Меч Экскалибур',
+        type='Холодное оружие',
+        material='Дамасская сталь',
+        style='Готика',
+        production_time=120,
+        price=10000.00
+    ).save()
 
-CatalogItem(
-    name='Скульптура Давида',
-    type='Скульптуры',
-    material='Тигельная сталь',
-    style='Историческое',
-    production_time=100,
-    price=100000.00
-)
-CatalogItem(
-    name='Средневековая броня',
-    type='Броня',
-    material='Железо',
-    style='Готика',
-    production_time=100,
-    price=12000.00
-)
-CatalogItem(
-    name='Броня эпохи Возрождения',
-    type='Броня',
-    material='Дамасская сталь',
-    style='Фэнтези',
-    production_time=100,
-    price=130000.00
-)
-CatalogItem(
-    name='Меч Гарольда',
-    type='Холодное оружие',
-    material='Дамасская сталь',
-    style='Готика',
-    production_time=120,
-    price=110000.00
-)
-CatalogItem(
-    name='Ворота Тадж-Махала',
-    type='Ворота',
-    material='Мозаичный',
-    style='Исторический',
-    production_time=1000,
-    price=1000000.00
-)
-CatalogItem(
-    name='Ворота Колизея',
-    type='Ворота',
-    material='Мозаичный',
-    style='Исторический',
-    production_time=900,
-    price=1000000.00
-)
+    CatalogItem(
+        name='Скульптура Давида',
+        type='Скульптуры',
+        material='Тигельная сталь',
+        style='Историческое',
+        production_time=100,
+        price=100000.00
+    ).save()
+    CatalogItem(
+        name='Средневековая броня',
+        type='Броня',
+        material='Железо',
+        style='Готика',
+        production_time=100,
+        price=12000.00
+    ).save()
+    CatalogItem(
+        name='Броня эпохи Возрождения',
+        type='Броня',
+        material='Дамасская сталь',
+        style='Фэнтези',
+        production_time=100,
+        price=130000.00
+    ).save()
+    CatalogItem(
+        name='Меч Гарольда',
+        type='Холодное оружие',
+        material='Дамасская сталь',
+        style='Готика',
+        production_time=120,
+        price=110000.00
+    ).save()
+    CatalogItem(
+        name='Ворота Тадж-Махала',
+        type='Ворота',
+        material='Мозаичный',
+        style='Исторический',
+        production_time=1000,
+        price=1000000.00
+    ).save()
+    CatalogItem(
+        name='Ворота Колизея',
+        type='Ворота',
+        material='Мозаичный',
+        style='Исторический',
+        production_time=900,
+        price=1000000.00
+    ).save()
 cli1 = Client.get(id=1)
 cli2 = Client.get(id=2)
 cli3 = Client.get(id=3)
@@ -79,26 +85,45 @@ cat1 = CatalogItem.get(id=1)
 cat2 = CatalogItem.get(id=2)
 cat4 = CatalogItem.get(id=4)
 
-OrderCatalog(
-    client=cli1,
-    catalog = cat2,
-    created_at = '2024-03-14 15:08:05',
-    amount = 3,
-    status = 'd'
-)
-OrderCatalog(
-    client=cli2,
-    catalog = cat1,
-    created_at = '2024-03-14 15:08:05',
-    amount = 3,
-    status = 'ip'
-)
-OrderCatalog(
-    client=cli3,
-    catalog = cat4,
-    created_at = '2024-03-14 15:08:05',
-    amount = 1,
-    status = 'ip'
-)
-
+if not OrderCatalog.table_exists():
+    db.create_tables([OrderCatalog])
+    OrderCatalog(
+        client=cli1,
+        catalog = cat2,
+        created_at = '2024-03-14 15:08:05',
+        amount = 3,
+        status = 'd'
+    ).save()
+    OrderCatalog(
+        client=cli2,
+        catalog = cat1,
+        created_at = '2024-03-14 15:08:05',
+        amount = 3,
+        status = 'ip'
+    ).save()
+    OrderCatalog(
+        client=cli3,
+        catalog = cat4,
+        created_at = '2024-03-14 15:08:05',
+        amount = 1,
+        status = 'ip'
+    ).save()
+if not User.table_exists():
+    db.create_tables([User])
+    User(
+        name='user',
+        password='uuu'
+    ).save()
+    User(
+        name='admin',
+        password='aaa'
+    ).save()
+if not OrderIndividual.table_exists():
+    db.create_tables([OrderIndividual])
+    OrderIndividual(
+        client = cli3,
+        created_at = '2024-03-15 15:33:21',
+        amount = 2,
+        price = 84000.00
+    ).save()
 
