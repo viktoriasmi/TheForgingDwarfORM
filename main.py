@@ -3,6 +3,7 @@ from models import *
 import datetime
 from peewee import *
 import hashlib
+from playhouse.shortcuts import *
 
 def encrypt_password_first():
     users = User.select()
@@ -168,14 +169,20 @@ def theforgingdwarfadmin():
             add_new_client()
         if number == 3:
             print('Таблица заказов из каталога: ')
+            column_names = ['id', 'client', 'catalog', 'created_at', 'amount', 'status']
+            print(' | '.join(column_names))
             for row in OrderCatalog.select():
                 print(row.id, row.client, row.catalog, row.created_at, row.amount, row.status)
             print('Таблица индивидуальных заказов: ')
+            column_names = ['id', 'client', 'req', 'created_at', 'amount', 'status', 'price']
+            print(' | '.join(column_names))
             for row in OrderIndividual.select():
                 print(row.id, row.client, row.req, row.created_at, row.amount, row.status, row.price)
             table = input("Введите 'c' для удаления заказа из каталога или 'i' для удаления заказа из индивидуальных заказов: ")
             order_id = int(input("Введите ID заказа, который хотите удалить: "))
             delete_order(table, order_id)
+        if number ==  4:
+            change_order()
 
 def theforgingdwarfuser():
     while True:
@@ -220,12 +227,16 @@ def add_new_order():
     if order_type == 1:
         print("Клиенты: ")
         clients = Client.select()
+        column_names = ['id', 'last_name', 'first_name', 'address']
+        print(' | '.join(column_names))
         for client in clients:
             print(client.id, client.first_name, client.last_name, client.address)
 
         client_id = int(input("Введите ID клиента: "))
 
         print("Каталог:")
+        column_names = ['id', 'name', 'type', 'material', 'style', 'description', 'production_time', 'price']
+        print(' | '.join(column_names))
         catalog_items = CatalogItem.select()
         for item in catalog_items:
             print(item.id, item.name, item.type, item.material, item.style)
@@ -239,6 +250,8 @@ def add_new_order():
 
     elif order_type == 2:
         print("Клиенты:")
+        column_names = ['id', 'last_name', 'first_name', 'address']
+        print(' | '.join(column_names))
         clients = Client.select()
         for client in clients:
             print(client.id, client.first_name, client.last_name, client.address)
@@ -272,5 +285,59 @@ def delete_order(table, order_id):
     else:
         print("Неверный выбор таблицы.")
     print('Заказ успешно удален.\n')
+
+
+def change_order():
+    while True:
+        table_choice = input("Выберите таблицу для изменения заказа, заказы из каталога или индивидуальные заказы (c/i): ")
+        if table_choice not in ['c', 'i']:
+            print("Некорректное название таблицы. Пожалуйста, попробуйте снова.")
+            continue
+        if table_choice == 'c':
+            orders = OrderCatalog.select()
+            column_names = ['id', 'client_id', 'catalog_id', 'created_at', 'amount', 'status']
+            print(' | '.join(column_names))
+            for order in orders:
+                print(order.id, order.client_id, order.catalog_id, order.created_at, order.amount, order.status)
+        elif table_choice == 'i':
+            orders = OrderIndividual.select()
+            column_names = ['id', 'client_id', 'req', 'created_at', 'amount', 'status', 'price']
+            print(' | '.join(column_names))
+            for order in orders:
+                print(order.id, order.client_id, order.req, order.created_at, order.amount, order.status, order.price)
+
+
+        order_id = input("Введите ID заказа, который хотите изменить: ")
+        order_id = int(order_id)
+
+        try:
+            if table_choice == 'c':
+                order = OrderCatalog.get(OrderCatalog.id == order_id)
+            elif table_choice == 'i':
+                order = OrderIndividual.get(OrderIndividual.id == order_id)
+        except DoesNotExist:
+            print("Заказ с таким ID не найден. Пожалуйста, попробуйте снова.")
+            continue
+
+        field = input("Введите название поля, которое хотите изменить: ")
+        new_value = input(f"Введите новое значение для поля {field}: ")
+        if field == "status" and new_value not in ['ip', 'c', 'd']:
+            print("Неверное значение для поля status. Пожалуйста, введите значение ip, c или d.")
+        else:
+            pass
+        if field == 'req' and not isinstance(new_value, str):
+            print("Ошибка: Неверный формат. Значение должно быть строкой.")
+        elif field in ['id', 'client_id', 'amount'] and not isinstance(new_value, int):
+            print("Ошибка: Неверный формат. Значение должно быть целым числом.")
+        elif field == 'price' and not isinstance(new_value, (float, int)):
+            print("Ошибка: Неверный формат. Значение должно быть числом.")
+        else:
+            pass
+        setattr(order, field, new_value)
+        order.save()
+        print("Изменения сохранены.")
+        next_action = input("Желаете продолжить изменение заказов? (y/n): ")
+        if next_action.lower() != 'y':
+            break
 
 authenticate_user()
