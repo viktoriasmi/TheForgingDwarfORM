@@ -1,9 +1,14 @@
 import random
+
+import peewee
+
 from models import *
 import datetime
-from peewee import *
+
 import hashlib
 from playhouse.shortcuts import *
+from functools import reduce
+import operator
 
 def encrypt_password_first():
     users = User.select()
@@ -187,6 +192,11 @@ def theforgingdwarfadmin():
             add_item_to_catalog()
         if number == 6:
             change_catalog_item()
+        if number == 7:
+            search = input("Введите запрос для поиска: ")
+            search_database(search)
+
+
 
 def theforgingdwarfuser():
     while True:
@@ -399,5 +409,20 @@ def change_catalog_item():
     item_to_update.save()
 
     print("Изделие успешно изменено.")
+
+
+def search_database(keyword):
+    results = []
+    for model in [User, Client, CatalogItem, OrderCatalog, OrderIndividual, IncomeData, IncomeIndividualData, QueueData,
+                  QueueIndividualData]:  # Добавьте остальные модели сюда
+        fields = [field for field in model._meta.get_fields() if
+                  isinstance(field, peewee.CharField)]  # Получаем только поля типа CharField
+        query = model.select().where(
+            reduce(operator.or_, (field.contains(keyword) for field in fields))
+        )
+        results.extend(list(query))
+
+    return results
+
 
 authenticate_user()
