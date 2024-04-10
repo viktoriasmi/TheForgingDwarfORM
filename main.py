@@ -164,7 +164,8 @@ def theforgingdwarfadmin():
         number = int(input("Выберите для продолжения: "))
         if number == 1:
             add_new_order()
-
+        if number == 2:
+            add_new_client()
 
 def theforgingdwarfuser():
     while True:
@@ -178,7 +179,7 @@ def theforgingdwarfuser():
         number = int(input("Выберите для продолжения: "))
         # добавить себя как клиента
         if number == 1:
-            pass
+            add_new_client()
 
 
 def authenticate_user():
@@ -244,6 +245,14 @@ def add_new_order():
     else:
         print("Неправильный выбор")
 
+def add_new_client():
+    first_name = input("Введите ваше имя: ")
+    last_name = input("Введите вашу фамилию: ")
+    address = input("Введите ваш адрес: ")
+
+    new_client = Client(first_name=first_name, last_name=last_name, address=address)
+    new_client.save()
+    print("Клиент успешно добавлен.\n")
 
 
 
