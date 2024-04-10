@@ -181,8 +181,12 @@ def theforgingdwarfadmin():
             table = input("Введите 'c' для удаления заказа из каталога или 'i' для удаления заказа из индивидуальных заказов: ")
             order_id = int(input("Введите ID заказа, который хотите удалить: "))
             delete_order(table, order_id)
-        if number ==  4:
+        if number == 4:
             change_order()
+        if number == 5:
+            add_item_to_catalog()
+        if number == 6:
+            change_catalog_item()
 
 def theforgingdwarfuser():
     while True:
@@ -321,23 +325,79 @@ def change_order():
 
         field = input("Введите название поля, которое хотите изменить: ")
         new_value = input(f"Введите новое значение для поля {field}: ")
-        if field == "status" and new_value not in ['ip', 'c', 'd']:
-            print("Неверное значение для поля status. Пожалуйста, введите значение ip, c или d.")
-        else:
-            pass
-        if field == 'req' and not isinstance(new_value, str):
-            print("Ошибка: Неверный формат. Значение должно быть строкой.")
-        elif field in ['id', 'client_id', 'amount'] and not isinstance(new_value, int):
-            print("Ошибка: Неверный формат. Значение должно быть целым числом.")
-        elif field == 'price' and not isinstance(new_value, (float, int)):
-            print("Ошибка: Неверный формат. Значение должно быть числом.")
-        else:
-            pass
+        try:
+            if field == "status" and new_value not in ['ip', 'c', 'd']:
+                raise ValueError("Неверное значение для поля status. Пожалуйста, введите значение ip, c или d.")
+            if field == 'req' and not isinstance(new_value, str):
+                raise TypeError("Ошибка: Неверный формат. Значение должно быть строкой.")
+            if field in ['id', 'client_id', 'amount'] and not isinstance(new_value, int):
+                raise TypeError("Ошибка: Неверный формат. Значение должно быть целым числом.")
+            if field == 'price' and not isinstance(new_value, (float, int)):
+                raise TypeError("Ошибка: Неверный формат. Значение должно быть числом.")
+        except ValueError as ve:
+            print(ve)
+            break
+        except TypeError as te:
+            print(te)
+            break
         setattr(order, field, new_value)
         order.save()
         print("Изменения сохранены.")
         next_action = input("Желаете продолжить изменение заказов? (y/n): ")
         if next_action.lower() != 'y':
+            print('\n')
             break
+
+def add_item_to_catalog():
+    name = input("Введите название изделия: ")
+    type = input("Введите тип изделия: ")
+    material = input("Введите материал изделия: ")
+    style = input("Введите стиль изделия: ")
+    description = input("Введите описание изделия: ")
+    production_time = int(input("Введите время производства: "))
+    price = input("Введите цену изделия: ")
+    price = float(price)
+
+    new_item = CatalogItem.create(
+        name=name,
+        type=type,
+        material=material,
+        style=style,
+        description=description,
+        production_time=production_time,
+        price=price
+    )
+    print("Новое изделие добавлено в каталог.\n")
+
+
+def change_catalog_item():
+    catalog_items = CatalogItem.select()
+    column_names = ['id', 'name', 'type', 'material', 'style', 'description', 'production_time', 'price']
+    print(' | '.join(column_names))
+    for item in catalog_items:
+        print(item.id, item.name, item.type, item.material, item.style, item.description, item.production_time,
+              item.price)
+
+    item_id = int(input("Введите id изделия для изменения: "))
+
+    item_to_update = CatalogItem.get(CatalogItem.id == item_id)
+
+    field_name = input(
+        "Какое поле вы хотите изменить? (name, type, material, style, description, production_time, price): ")
+
+    new_value = input("Введите новое значение: ")
+    try:
+        if field_name == 'price':
+            new_value = float(new_value)
+        elif field_name == 'production_time':
+            new_value = int(new_value)
+    except ValueError:
+        print("Ошибка: Неверный формат. Значение должно быть числом.")
+        exit()
+
+    setattr(item_to_update, field_name, new_value)
+    item_to_update.save()
+
+    print("Изделие успешно изменено.")
 
 authenticate_user()
