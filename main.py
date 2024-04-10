@@ -166,6 +166,16 @@ def theforgingdwarfadmin():
             add_new_order()
         if number == 2:
             add_new_client()
+        if number == 3:
+            print('Таблица заказов из каталога: ')
+            for row in OrderCatalog.select():
+                print(row.id, row.client, row.catalog, row.created_at, row.amount, row.status)
+            print('Таблица индивидуальных заказов: ')
+            for row in OrderIndividual.select():
+                print(row.id, row.client, row.req, row.created_at, row.amount, row.status, row.price)
+            table = input("Введите 'c' для удаления заказа из каталога или 'i' для удаления заказа из индивидуальных заказов: ")
+            order_id = int(input("Введите ID заказа, который хотите удалить: "))
+            delete_order(table, order_id)
 
 def theforgingdwarfuser():
     while True:
@@ -254,6 +264,13 @@ def add_new_client():
     new_client.save()
     print("Клиент успешно добавлен.\n")
 
-
+def delete_order(table, order_id):
+    if table == 'c':
+        OrderCatalog.delete().where(OrderCatalog.id == order_id).execute()
+    elif table == 'i':
+        OrderIndividual.delete().where(OrderIndividual.id == order_id).execute()
+    else:
+        print("Неверный выбор таблицы.")
+    print('Заказ успешно удален.\n')
 
 authenticate_user()
