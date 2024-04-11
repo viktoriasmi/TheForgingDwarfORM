@@ -1,5 +1,5 @@
 import random
-
+import sqlite3
 import peewee
 
 from models import *
@@ -194,7 +194,9 @@ def theforgingdwarfadmin():
             change_catalog_item()
         if number == 7:
             search = input("Введите запрос для поиска: ")
-            search_database(search)
+            search_results = search_database(search)
+            for result in search_results:
+                print(result)
 
 
 
@@ -411,18 +413,19 @@ def change_catalog_item():
     print("Изделие успешно изменено.")
 
 
-def search_database(keyword):
+def search_database(query):
+    # Функция для поиска по всем таблицам
     results = []
-    for model in [User, Client, CatalogItem, OrderCatalog, OrderIndividual, IncomeData, IncomeIndividualData, QueueData,
-                  QueueIndividualData]:  # Добавьте остальные модели сюда
-        fields = [field for field in model._meta.get_fields() if
-                  isinstance(field, peewee.CharField)]  # Получаем только поля типа CharField
-        query = model.select().where(
-            reduce(operator.or_, (field.contains(keyword) for field in fields))
-        )
-        results.extend(list(query))
-
+    tables = [User, Client, CatalogItem, OrderCatalog, OrderIndividual]
+    for table in tables:
+        queryset = table.select()
+        for result in queryset:
+            data = model_to_dict(result)
+            if query.lower() in str(data).lower():
+                results.append(data)
     return results
+
+
 
 
 authenticate_user()
