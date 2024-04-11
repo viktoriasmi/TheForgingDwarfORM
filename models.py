@@ -70,15 +70,13 @@ class OrderIndividual(BaseModel):
 class IncomeData(BaseModel):
     class Meta:
         table_name = 'income'
-    order = ForeignKeyField(OrderCatalog)
-    price = FloatField()
+    income = FloatField()
     created_at = DateTimeField(default=datetime.datetime.now)
 
 class IncomeIndividualData(BaseModel):
     class Meta:
         table_name = 'income_individual'
-    order = ForeignKeyField(OrderIndividual)
-    price = FloatField()
+    income = FloatField()
     created_at = DateTimeField(default=datetime.datetime.now)
 
 class QueueData(BaseModel):

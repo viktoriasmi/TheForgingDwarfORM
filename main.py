@@ -168,6 +168,7 @@ def theforgingdwarfadmin():
         print('7 - поиск')
         print('8 - показать очередь заказов')
         print('9 - вывести доход кузницы')
+        print('10 - очистить доходы кузницы')
         number = int(input("Выберите для продолжения: "))
         if number == 1:
             add_new_order()
@@ -198,8 +199,16 @@ def theforgingdwarfadmin():
             search_results = search_database(search)
             for result in search_results:
                 print(result)
+            print('\n')
         if number == 8:
             display_order_queue()
+        if number == 9:
+            calculate_income()
+        if number == 10:
+            IncomeData.delete().execute()
+            IncomeIndividualData.delete().execute()
+            print('Данные успешно удалены\n')
+
 
 
 
@@ -217,12 +226,13 @@ def theforgingdwarfuser():
         if number == 1:
             add_new_client()
         if number == 2:
-            pass
+            add_new_order_user()
         if number == 3:
             search = input("Введите запрос для поиска: ")
             search_results = search_database_user(search)
             for result in search_results:
                 print(result)
+            print('\n')
         if number == 4:
             print("Каталог: ")
             column_names = ['id', 'name', 'type', 'material', 'style', 'description', 'production_time', 'price']
@@ -230,6 +240,7 @@ def theforgingdwarfuser():
             catalog_items = CatalogItem.select()
             for item in catalog_items:
                 print(item.id, item.name, item.type, item.material, item.style, item.description, item.production_time, item.price)
+            print('\n')
 
 def authenticate_user():
     username = input("Введите имя пользователя: ")
@@ -427,7 +438,7 @@ def change_catalog_item():
     setattr(item_to_update, field_name, new_value)
     item_to_update.save()
 
-    print("Изделие успешно изменено.")
+    print("Изделие успешно изменено.\n")
 
 
 def search_database(query):
@@ -484,5 +495,81 @@ def display_order_queue():
     print(' | '.join(column_names))
     for queue_data in QueueIndividualData.select().order_by(QueueIndividualData.created_at):
         print(queue_data.order, queue_data.created_at, queue_data.status, queue_data.production_time)
+    print('\n')
+
+def calculate_income():
+    total_income_individual = OrderIndividual.select(fn.SUM(OrderIndividual.price)).where(
+        OrderIndividual.status != 'c').scalar()
+    IncomeIndividualData.create(income=total_income_individual, created_at=datetime.datetime.now())
+
+    total_price = OrderCatalog.select(fn.SUM(CatalogItem.price)).join(CatalogItem, on=(
+                OrderCatalog.catalog == CatalogItem.id)).where(OrderCatalog.status != 'c').scalar()
+    IncomeData.create(income=total_price, created_at=datetime.datetime.now())
+
+    print("Доходы кузницы с заказов из каталога: ")
+    column_names = ['income', 'created_at']
+    print(' | '.join(column_names))
+    for income_data in IncomeData.select():
+        print(income_data.income, income_data.created_at)
+
+    print("Доходы кузницы с индивидуальных заказов: ")
+    column_names = ['income', 'created_at']
+    print(' | '.join(column_names))
+    for income_individual_data in IncomeIndividualData.select():
+        print(income_individual_data.income, income_individual_data.created_at)
+    print('\n')
+
+
+def add_new_order_user():
+    # Считывание данных от пользователя
+    first_name = input("Введите ваше имя : ")
+    last_name = input("Введите вашу фамилию: ")
+
+    # Поиск клиента в базе данных
+    clients = Client.select().where(Client.first_name == first_name, Client.last_name == last_name)
+
+    if clients.count() > 1:
+        address = input("Уточните ваш адрес: ")
+        clients = Client.select().where(Client.first_name == first_name, Client.last_name == last_name,
+                                        Client.address == address)
+
+    if clients.count() == 0:
+        register = input("Клиент не найден. Желаете зарегистрироваться? (y/n) ")
+
+        if register.lower() == "n":
+            print("Без регистрации нельзя отправить заявку на заказ.")
+            return
+        address = input("Введите ваш адрес: ")
+        new_client = Client.create(first_name=first_name, last_name=last_name, address=address)
+        client = new_client
+    else:
+        client = clients.get()
+
+    order_type = input("Выберите тип заказа: каталог/индивидуальный (c/i)?: ")
+
+    if order_type.lower() == "c":
+        # Вывод каталога и выбор изделия
+        catalog_items = CatalogItem.select()
+        for item in catalog_items:
+            print(f"ID: {item.id}, Название: {item.name}, Тип: {item.type}, Материал: {item.material}, Стиль: {item.style}, Описание: {item.description},  Цена: {item.price}")
+
+        catalog_id = int(input("Введите ID изделия из каталога: "))
+        catalog_item = CatalogItem.get_by_id(catalog_id)
+
+        amount = int(input("Введите количество изделий: "))
+
+        OrderCatalog.create(client=client, catalog=catalog_item, created_at=datetime.datetime.now(), amount=amount,
+                            status="ip")
+    elif order_type.lower() == "i":
+        req = input("Введите требования к заказу: ")
+        amount = int(input("Введите количество изделий: "))
+
+        production_time = random.randint(100, 500)
+        price = random.randint(5000, 50000)
+
+        OrderIndividual.create(client=client, req=req, created_at=datetime.datetime.now(), amount=amount,
+                               status="ip", price=price, production_time=production_time)
+
+    print("Заказ успешно добавлен.")
 
 authenticate_user()
