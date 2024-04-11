@@ -144,6 +144,7 @@ if not OrderIndividual.table_exists():
         client = cli3,
         created_at = '2024-03-15 15:33:21',
         amount = 2,
+        production_time = 120,
         price = 84000.00
     ).save()
 
@@ -179,10 +180,10 @@ def theforgingdwarfadmin():
             for row in OrderCatalog.select():
                 print(row.id, row.client, row.catalog, row.created_at, row.amount, row.status)
             print('Таблица индивидуальных заказов: ')
-            column_names = ['id', 'client', 'req', 'created_at', 'amount', 'status', 'price']
+            column_names = ['id', 'client', 'req', 'created_at', 'amount', 'status', 'production_time', 'price']
             print(' | '.join(column_names))
             for row in OrderIndividual.select():
-                print(row.id, row.client, row.req, row.created_at, row.amount, row.status, row.price)
+                print(row.id, row.client, row.req, row.created_at, row.amount, row.status, row.production_time, row.price)
             table = input("Введите 'c' для удаления заказа из каталога или 'i' для удаления заказа из индивидуальных заказов: ")
             order_id = int(input("Введите ID заказа, который хотите удалить: "))
             delete_order(table, order_id)
@@ -197,6 +198,8 @@ def theforgingdwarfadmin():
             search_results = search_database(search)
             for result in search_results:
                 print(result)
+        if number == 8:
+            display_order_queue()
 
 
 
@@ -213,7 +216,20 @@ def theforgingdwarfuser():
         # добавить себя как клиента
         if number == 1:
             add_new_client()
-
+        if number == 2:
+            pass
+        if number == 3:
+            search = input("Введите запрос для поиска: ")
+            search_results = search_database_user(search)
+            for result in search_results:
+                print(result)
+        if number == 4:
+            print("Каталог: ")
+            column_names = ['id', 'name', 'type', 'material', 'style', 'description', 'production_time', 'price']
+            print(' | '.join(column_names))
+            catalog_items = CatalogItem.select()
+            for item in catalog_items:
+                print(item.id, item.name, item.type, item.material, item.style, item.description, item.production_time, item.price)
 
 def authenticate_user():
     username = input("Введите имя пользователя: ")
@@ -255,7 +271,7 @@ def add_new_order():
         print(' | '.join(column_names))
         catalog_items = CatalogItem.select()
         for item in catalog_items:
-            print(item.id, item.name, item.type, item.material, item.style)
+            print(item.id, item.name, item.type, item.material, item.style, item.description, item.production_time, item.price)
 
         catalog_id = int(input("Введите ID изделия: "))
 
@@ -277,8 +293,9 @@ def add_new_order():
         req = input("Введите описание заказа: ")
         amount = int(input("Введите количество: "))
         price = random.randint(10000,100000)
+        production_time = random.randint(100,500)
 
-        new_order = OrderIndividual.create(client=client_id, req=req, amount=amount, price=price)
+        new_order = OrderIndividual.create(client=client_id, req=req, amount=amount, production_time=production_time, price=price)
         print("Заказ успешно добавлен!\n")
 
     else:
@@ -317,10 +334,10 @@ def change_order():
                 print(order.id, order.client_id, order.catalog_id, order.created_at, order.amount, order.status)
         elif table_choice == 'i':
             orders = OrderIndividual.select()
-            column_names = ['id', 'client_id', 'req', 'created_at', 'amount', 'status', 'price']
+            column_names = ['id', 'client_id', 'req', 'created_at', 'amount', 'status', 'production_time', 'price']
             print(' | '.join(column_names))
             for order in orders:
-                print(order.id, order.client_id, order.req, order.created_at, order.amount, order.status, order.price)
+                print(order.id, order.client_id, order.req, order.created_at, order.amount, order.status, order.production_time, order.price)
 
 
         order_id = input("Введите ID заказа, который хотите изменить: ")
@@ -414,9 +431,8 @@ def change_catalog_item():
 
 
 def search_database(query):
-    # Функция для поиска по всем таблицам
     results = []
-    tables = [User, Client, CatalogItem, OrderCatalog, OrderIndividual]
+    tables = [Client, CatalogItem, OrderCatalog, OrderIndividual]
     for table in tables:
         queryset = table.select()
         for result in queryset:
@@ -425,7 +441,48 @@ def search_database(query):
                 results.append(data)
     return results
 
+def search_database_user(query):
+    results = []
+    tables = [CatalogItem]
+    for table in tables:
+        queryset = table.select()
+        for result in queryset:
+            data = model_to_dict(result)
+            if query.lower() in str(data).lower():
+                results.append(data)
+    return results
 
+def display_order_queue():
+    QueueData.delete().execute()
+    QueueIndividualData.delete().execute()
 
+    for order in OrderCatalog.select():
+        if order.status == 'ip':  # Проверка статуса перед добавлением в очередь
+            catalog_item = CatalogItem.get(CatalogItem.id == order.catalog)
+            QueueData.create(
+                order=order,
+                created_at=order.created_at,
+                status=order.status,
+                production_time=catalog_item.production_time
+            )
+    for order in OrderIndividual.select():
+        if order.status == 'ip':  # Проверка статуса перед добавлением в очередь
+            QueueIndividualData.create(
+                order=order,
+                created_at=order.created_at,
+                status=order.status,
+                production_time=order.production_time
+            )
+    print("Очередь заказов из каталога:")
+    column_names = ['id', 'created_at', 'status', 'production_time']
+    print(' | '.join(column_names))
+    for queue_data in QueueData.select().order_by(QueueData.created_at):
+        print(queue_data.order, queue_data.created_at, queue_data.status, queue_data.production_time)
+
+    print("Очередь индивидуальных заказов:")
+    column_names = ['id', 'created_at', 'status', 'production_time']
+    print(' | '.join(column_names))
+    for queue_data in QueueIndividualData.select().order_by(QueueIndividualData.created_at):
+        print(queue_data.order, queue_data.created_at, queue_data.status, queue_data.production_time)
 
 authenticate_user()

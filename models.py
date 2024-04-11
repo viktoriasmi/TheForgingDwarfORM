@@ -64,6 +64,7 @@ class OrderIndividual(BaseModel):
     created_at = DateTimeField(default=datetime.datetime.now)
     amount = IntegerField(default=1)
     status = CharField(choices=STATUS_CHOICES, default='ip')
+    production_time = IntegerField(default=100)
     price = FloatField()
 
 class IncomeData(BaseModel):
