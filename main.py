@@ -169,6 +169,7 @@ def theforgingdwarfadmin():
         print('8 - показать очередь заказов')
         print('9 - вывести доход кузницы')
         print('10 - очистить доходы кузницы')
+        print('99 - выход')
         number = int(input("Выберите для продолжения: "))
         if number == 1:
             add_new_order()
@@ -208,7 +209,8 @@ def theforgingdwarfadmin():
             IncomeData.delete().execute()
             IncomeIndividualData.delete().execute()
             print('Данные успешно удалены\n')
-
+        if number == 99:
+            exit()
 
 
 
@@ -221,6 +223,7 @@ def theforgingdwarfuser():
         print('2 - отправить заявку на заказ')
         print('3 - поиск')
         print('4 - вывести каталог изделий')
+        print('99 - выход')
         number = int(input("Выберите для продолжения: "))
         # добавить себя как клиента
         if number == 1:
@@ -241,6 +244,8 @@ def theforgingdwarfuser():
             for item in catalog_items:
                 print(item.id, item.name, item.type, item.material, item.style, item.description, item.production_time, item.price)
             print('\n')
+        if number == 99:
+            exit()
 
 def authenticate_user():
     username = input("Введите имя пользователя: ")
